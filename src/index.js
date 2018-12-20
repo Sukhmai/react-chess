@@ -56,6 +56,7 @@ class Square extends React.Component {
                 draggable = "true"
                 onDragStart = {(ev) => this.onDragStart(ev, this.props.value)}
                 src = {this.props.value}
+                alt = "Chess piece"
             >
             </img>
             </button>
@@ -137,7 +138,7 @@ class Board extends React.Component {
     handleClick(k, j) {
         const board = this.state.board.slice();
         const clicked = this.state.clicked;
-        if (this.state.clicked % 2 == 0) {
+        if (this.state.clicked % 2 === 0) {
             this.setState({clickedLocation: [k,j]});
         } else {
             console.log(this.state.clicked);
@@ -157,6 +158,20 @@ class Board extends React.Component {
         var col = ev.dataTransfer.getData("col");
         board[row][col] = Empty;
         this.setState({board: board});
+    }
+
+    isLegal(initRow, initCol, endRow, endCol, piece) {
+        if (piece === WhitePawn) {return this.checkWhitePawn();}
+        else if (piece === BlackPawn) {return this.checkBlackPawn();}
+        else if (piece === BlackBishop || piece === WhiteBishop) {return this.checkBishop();}
+        else if (piece === BlackKnight || piece === WhiteKnight) {return this.checkKnight();}
+        else if (piece === BlackQueen || piece === WhiteQueen) {return this.checkQueen();}
+        else if (piece === BlackRook || piece === WhiteRook) {return this.checkRook();}
+        else if (piece === BlackKing || piece === WhiteKing) {return this.checkKing();}
+    }
+
+    checkWhitePawn() {
+        
     }
 
     render() {
