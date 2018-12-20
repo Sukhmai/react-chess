@@ -1,22 +1,45 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import BlackKing from './images/BlackKing.png';
+import BlackBishop from './images/BlackBishop.png';
+import WhiteKing from './images/WhiteKing.png';
+import WhiteBishop from './images/WhiteBishop.png';
+import BlackPawn from './images/BlackPawn.png';
+import BlackQueen from './images/BlackQueen.png';
+import BlackKnight from './images/BlackKnight.png';
+import WhitePawn from './images/WhitePawn.png';
+import WhiteQueen from './images/WhiteQueen.png';
+import WhiteKnight from './images/WhiteKnight.png';
+import BlackRook from './images/BlackRook.png';
+import WhiteRook from './images/WhiteRook.png';
+import Empty from './images/Empty.png';
 
 class Square extends React.Component {
 
     calculateColor() {
         var color = "#FFDEAD";
-        if ((this.props.num + this.props.rank) % 2 === 0) {
+        if ((this.props.row + this.props.col) % 2 === 0) {
             color = "#DEB887";
         }
         return color;
+    }
+
+    onDragOver(ev) {
+        ev.preventDefault();
+    }
+
+    onDragStart(ev, id) {
+        ev.dataTransfer.setData("id", id);
+        ev.dataTransfer.setData("row", this.props.row);
+        ev.dataTransfer.setData("col", this.props.col);
     }
 
     constructor(props) {
         super(props);
         this.state = {
             color: this.calculateColor(),
-            value: this.props.value,
+
         }
     }
 
@@ -26,8 +49,15 @@ class Square extends React.Component {
                 className = "square"
                 style = {{backgroundColor: this.state.color}}
                 onClick = {() => this.props.onClick()}
+                onDragOver = {(ev) => this.onDragOver(ev)}
+                onDrop = {(ev) => this.props.onDrop(ev)}
             >
-            {this.props.value}
+            <img
+                draggable = "true"
+                onDragStart = {(ev) => this.onDragStart(ev, this.props.value)}
+                src = {this.props.value}
+            >
+            </img>
             </button>
         )
     }
@@ -38,10 +68,11 @@ class Row extends React.Component {
     renderSquare(i) {
         return (
             <Square
-                num = {this.state.num}
-                rank = {i}
+                row = {this.state.num}
+                col = {i}
                 value = {this.state.value[i]}
                 onClick = {() => this.props.onClick(this.state.num, i)}
+                onDrop = {(ev) => this.props.onDrop(this.state.num, i, ev)}
             />
         )
     }
@@ -78,6 +109,7 @@ class Board extends React.Component {
                 num = {i}
                 value = {this.state.board[i]}
                 onClick = {(k, j) => this.handleClick(k, j)}
+                onDrop = {(k, j, ev) => this.handleDrop(k, j, ev)}
             />
         )
     }
@@ -85,21 +117,46 @@ class Board extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            board: [[0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0]]
+            board: [[BlackRook, BlackKnight, BlackBishop, BlackQueen,
+                BlackKing, BlackBishop, BlackKnight, BlackRook],
+                    [BlackPawn, BlackPawn, BlackPawn, BlackPawn,
+                        BlackPawn, BlackPawn, BlackPawn, BlackPawn],
+                    [Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+                    [Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+                    [Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+                    [Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+                    [WhitePawn, WhitePawn, WhitePawn, WhitePawn,
+                        WhitePawn, WhitePawn, WhitePawn, WhitePawn],
+                    [WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen,
+                        WhiteKing, WhiteBishop, WhiteKnight, WhiteRook]],
+            clicked: 0,
+            clickedLocation: [0,0],
         }
     }
 
     handleClick(k, j) {
         const board = this.state.board.slice();
-        board[k][j] = 1;
-        this.setState({board: board})
+        const clicked = this.state.clicked;
+        if (this.state.clicked % 2 == 0) {
+            this.setState({clickedLocation: [k,j]});
+        } else {
+            console.log(this.state.clicked);
+            var row = this.state.clickedLocation[0];
+            var col = this.state.clickedLocation[1];
+            board[k][j] = this.state.board[row][col];
+            board[row][col] = Empty;
+            this.setState({board: board});
+        }
+        this.setState({clicked: clicked + 1});
+    }
+
+    handleDrop(k, j, ev) {
+        const board = this.state.board.slice();
+        board[k][j] = ev.dataTransfer.getData("id");
+        var row = ev.dataTransfer.getData("row");
+        var col = ev.dataTransfer.getData("col");
+        board[row][col] = Empty;
+        this.setState({board: board});
     }
 
     render() {
