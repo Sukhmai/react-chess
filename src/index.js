@@ -136,42 +136,131 @@ class Board extends React.Component {
     }
 
     handleClick(k, j) {
-        const board = this.state.board.slice();
         const clicked = this.state.clicked;
         if (this.state.clicked % 2 === 0) {
             this.setState({clickedLocation: [k,j]});
         } else {
-            console.log(this.state.clicked);
             var row = this.state.clickedLocation[0];
             var col = this.state.clickedLocation[1];
-            board[k][j] = this.state.board[row][col];
-            board[row][col] = Empty;
-            this.setState({board: board});
+            if (this.isLegal(row, col, k, j, this.state.board[row][col], this.state.board)) {
+                const board = this.state.board.slice();
+                board[k][j] = this.state.board[row][col];
+                board[row][col] = Empty;
+                this.setState({board: board});
+            }
         }
         this.setState({clicked: clicked + 1});
     }
 
     handleDrop(k, j, ev) {
-        const board = this.state.board.slice();
-        board[k][j] = ev.dataTransfer.getData("id");
-        var row = ev.dataTransfer.getData("row");
-        var col = ev.dataTransfer.getData("col");
-        board[row][col] = Empty;
-        this.setState({board: board});
+        var row = Number(ev.dataTransfer.getData("row"));
+        var col = Number(ev.dataTransfer.getData("col"));
+        var piece = ev.dataTransfer.getData("id");
+        if (this.isLegal(row, col, k, j, piece, this.state.board)) {
+            const board = this.state.board.slice();
+            board[k][j] = piece;
+            board[row][col] = Empty;
+            this.setState({board: board});
+        }
     }
 
-    isLegal(initRow, initCol, endRow, endCol, piece) {
-        if (piece === WhitePawn) {return this.checkWhitePawn();}
-        else if (piece === BlackPawn) {return this.checkBlackPawn();}
-        else if (piece === BlackBishop || piece === WhiteBishop) {return this.checkBishop();}
-        else if (piece === BlackKnight || piece === WhiteKnight) {return this.checkKnight();}
-        else if (piece === BlackQueen || piece === WhiteQueen) {return this.checkQueen();}
-        else if (piece === BlackRook || piece === WhiteRook) {return this.checkRook();}
-        else if (piece === BlackKing || piece === WhiteKing) {return this.checkKing();}
+    isLegal(initRow, initCol, endRow, endCol, piece, board) {
+        if (piece === WhitePawn) {
+            return this.checkWhitePawn(initRow, initCol, endRow, endCol, board);
+        } else if (piece === BlackPawn) {
+            return this.checkBlackPawn(initRow, initCol, endRow, endCol, board);
+        } else if (piece === BlackBishop || piece === WhiteBishop) {
+            return this.checkBishop(initRow, initCol, endRow, endCol, board, this.isBlackPiece(piece));
+        } else if (piece === BlackKnight || piece === WhiteKnight) {
+            return this.checkKnight(initRow, initCol, endRow, endCol, board, this.isBlackPiece(piece));
+        } else if (piece === BlackQueen || piece === WhiteQueen) {
+            return this.checkQueen(initRow, initCol, endRow, endCol, board, this.isBlackPiece(piece));
+        } else if (piece === BlackRook || piece === WhiteRook) {
+            return this.checkRook(initRow, initCol, endRow, endCol, board, this.isBlackPiece(piece));
+        } else if (piece === BlackKing || piece === WhiteKing) {
+            return this.checkKing(initRow, initCol, endRow, endCol, board, this.isBlackPiece(piece));
+        }
     }
 
-    checkWhitePawn() {
-        
+    checkWhitePawn(initRow, initCol, endRow, endCol, board) {
+        if(initCol === endCol) {
+            if(board[endRow][endCol] === Empty) {
+                if (initRow === 6) {
+                    if (endRow === 5 || endRow === 4) {
+                        return true;
+                    }
+                } else {
+                    if (endRow === initRow - 1) {
+                        return true;
+                    }
+                }
+            }
+        } else if (endCol === initCol - 1 || endCol === initCol + 1) {
+            if(endRow === initRow -1 && this.isBlackPiece(board[endRow][endCol])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    checkBlackPawn(initRow, initCol, endRow, endCol, board) {
+        if(initCol === endCol) {
+            if(this.isEmpty(board[endRow][endCol])) {
+                if (initRow === 1) {
+                    if (endRow === 2 || endRow === 3) {
+                        return true;
+                    }
+                } else {
+                    if (endRow === initRow + 1) {
+                        return true;
+                    }
+                }
+            }
+        } else if (endCol === initCol - 1 || endCol === initCol + 1) {
+            if(endRow === initRow + 1 && !(this.isBlackPiece(board[endRow][endCol]))
+                && !this.isEmpty(board[endRow][endCol])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    checkBishop(initRow, initCol, endRow, endCol, board, color) {
+        if(endRow > initRow) {
+            if(endCol > initCol) {
+                for(var i = Math.max(initRow, initCol); i < 7; i++) {
+                    if(initRow + i === endRow && initCol + i === endCol) {
+                        var endPos = board[endRow][endCol];
+                        if(!(this.isEmpty(endPos))) {
+                            if(color !== this.isBlackPiece(endPos)) {
+                                return true;
+                            }
+                            return false;
+                        }
+                        return true;
+                    } else if (!(this.isEmpty(board[initRow + i][initCol + i]))) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+    }
+
+    isBlackPiece(piece) {
+        if(piece === BlackKing
+            || piece === BlackQueen
+            || piece === BlackKnight
+            || piece === BlackPawn
+            || piece === BlackRook
+            || piece === BlackBishop) {
+                return true;
+            }
+        return false;
+    }
+
+    isEmpty(piece) {
+        return piece === Empty;
     }
 
     render() {
