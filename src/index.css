@@ -11,6 +11,13 @@ button {
     text-align: center;
 }
 
-img {
-    
+.turn {
+    display: inline;
+    font-size: 32px;
+    font-family: Trebuchet MS,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Tahoma,sans-serif;
+}
+
+.fullBoard {
+    display: flex;
+    flex-direction: column;
 }

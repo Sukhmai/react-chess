@@ -132,6 +132,7 @@ class Board extends React.Component {
                         WhiteKing, WhiteBishop, WhiteKnight, WhiteRook]],
             clicked: 0,
             clickedLocation: [0,0],
+            turn: "White"
         }
     }
 
@@ -157,6 +158,7 @@ class Board extends React.Component {
         var col = Number(ev.dataTransfer.getData("col"));
         var piece = ev.dataTransfer.getData("id");
         if (this.isLegal(row, col, k, j, piece, this.state.board)) {
+            this.setState({turn: this.isBlackPiece(piece) ? "White" : "Black"});
             const board = this.state.board.slice();
             board[k][j] = piece;
             board[row][col] = Empty;
@@ -165,6 +167,9 @@ class Board extends React.Component {
     }
 
     isLegal(initRow, initCol, endRow, endCol, piece, board) {
+        if(this.isBlackPiece(piece) !== (this.state.turn === "Black")) {
+            return false;
+        }
         if (piece === WhitePawn) {
             return this.checkWhitePawn(initRow, initCol, endRow, endCol, board);
         } else if (piece === BlackPawn) {
@@ -228,23 +233,143 @@ class Board extends React.Component {
     checkBishop(initRow, initCol, endRow, endCol, board, color) {
         if(endRow > initRow) {
             if(endCol > initCol) {
-                for(var i = Math.max(initRow, initCol); i < 7; i++) {
+                for(var i = 1; i <= 7 - Math.max(initRow, initCol); i++) {
                     if(initRow + i === endRow && initCol + i === endCol) {
                         var endPos = board[endRow][endCol];
-                        if(!(this.isEmpty(endPos))) {
-                            if(color !== this.isBlackPiece(endPos)) {
-                                return true;
-                            }
-                            return false;
-                        }
-                        return true;
+                        return this.isSameColor(endPos, color);
                     } else if (!(this.isEmpty(board[initRow + i][initCol + i]))) {
+                        return false;
+                    }
+                }
+            } else {
+                for(var i = 1; i <= Math.min(7 - initRow, initCol); i++) {
+                    if(initRow + i === endRow && initCol - i === endCol) {
+                        var endPos = board[endRow][endCol];
+                        return this.isSameColor(endPos, color);
+                    } else if (!(this.isEmpty(board[initRow + i][initCol - i]))) {
+                        return false;
+                    }
+                }
+            }
+        } else {
+            if(endCol > initCol) {
+                for(var i = 1; i <= Math.min(initRow, 7 - initCol); i++) {
+                    if(initRow - i === endRow && initCol + i === endCol) {
+                        var endPos = board[endRow][endCol];
+                        return this.isSameColor(endPos, color);
+                    } else if (!(this.isEmpty(board[initRow - i][initCol + i]))) {
+                        return false;
+                    }
+                }
+            } else {
+                for(var i = 1; i <= Math.min(initRow, initCol); i++) {
+                    if(initRow - i === endRow && initCol - i === endCol) {
+                        var endPos = board[endRow][endCol];
+                        return this.isSameColor(endPos, color);
+                    } else if (!(this.isEmpty(board[initRow - i][initCol - i]))) {
+                        return false;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
+    checkKnight(initRow, initCol, endRow, endCol, board, color) {
+        if((endRow === initRow + 2 && endCol === initCol + 1)
+            || (endRow === initRow + 2 && endCol === initCol - 1)
+            || (endRow === initRow - 2 && endCol === initCol + 1)
+            || (endRow === initRow - 2 && endCol === initCol - 1)
+            || (endRow === initRow + 1 && endCol === initCol + 2)
+            || (endRow === initRow + 1 && endCol === initCol - 2)
+            || (endRow === initRow - 1 && endCol === initCol + 2)
+            || (endRow === initRow - 1 && endCol === initCol - 2)) {
+                var endPos = board[endRow][endCol];
+                if(!(this.isEmpty(endPos))) {
+                    if(color !== this.isBlackPiece(endPos)) {
+                        return true;
+                    }
+                    return false;
+                }
+                return true;
+            }
+        return false;
+    }
+
+    checkRook(initRow, initCol, endRow, endCol, board, color) {
+
+        if(endCol === initCol) {
+            if(endRow > initRow) {
+                for(var i = 1; i <= endRow - initRow; i++) {
+                    // console.log(initRow+":"+initCol+":"+endRow+":"+endCol);
+                    if (initRow + i === endRow) {
+                        var endPos = board[endRow][endCol];
+                        return this.isSameColor(endPos, color);
+                    } else if (!(this.isEmpty(board[initRow + i][initCol]))) {
+                        return false;
+                    }
+                }
+            } else {
+                for(var i = 1; i <= initRow-endRow; i++) {
+                    if (initRow - i === endRow) {
+                        var endPos = board[endRow][endCol];
+                        return this.isSameColor(endPos, color);
+                    } else if (!(this.isEmpty(board[initRow - i][initCol]))) {
+                        return false;
+                    }
+                }
+            }
+        } else if (endRow === initRow) {
+            if(endCol > initCol) {
+                for(var i = 1; i <= endCol - initCol; i++) {
+                    if (initCol + i === endCol) {
+                        var endPos = board[endRow][endCol];
+                        return this.isSameColor(endPos, color);
+                    } else if (!(this.isEmpty(board[initRow][initCol + i]))) {
+                        return false;
+                    }
+                }
+            } else {
+                for(var i = 1; i <= initCol - endCol; i++) {
+                    if (initCol - i === endCol) {
+                        var endPos = board[endRow][endCol];
+                        return this.isSameColor(endPos, color);
+                    } else if (!(this.isEmpty(board[initRow][initCol - i]))) {
                         return false;
                     }
                 }
             }
         }
+        return false;
+    }
 
+    checkQueen(initRow, initCol, endRow, endCol, board, color) {
+        if(this.checkRook(initRow, initCol, endRow, endCol, board, color)
+            || this.checkBishop(initRow, initCol, endRow, endCol, board, color)) {
+            return true;
+        }
+        return false;
+    }
+
+    checkKing(initRow, initCol, endRow, endCol, board, color) {
+        if((endRow === initRow + 1 && endCol === initCol + 1)
+            || (endRow === initRow + 1 && endCol === initCol)
+            || (endRow === initRow + 1 && endCol === initCol - 1)
+            || (endRow === initRow && endCol === initCol + 1)
+            || (endRow === initRow && endCol === initCol - 1)
+            || (endRow === initRow - 1 && endCol === initCol + 1)
+            || (endRow === initRow - 1 && endCol === initCol)
+            || (endRow === initRow - 1 && endCol === initCol - 1)) {
+                var endPos = board[endRow][endCol];
+                if(!(this.isEmpty(endPos))) {
+                    if(color !== this.isBlackPiece(endPos)) {
+                        return true;
+                    }
+                    return false;
+                }
+                return true;
+            }
+        return false;
     }
 
     isBlackPiece(piece) {
@@ -263,17 +388,33 @@ class Board extends React.Component {
         return piece === Empty;
     }
 
+    isSameColor(endPos, color) {
+        if(!(this.isEmpty(endPos))) {
+            if(color !== this.isBlackPiece(endPos)) {
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
+
     render() {
         return (
             <div className = "fullBoard">
-                {this.renderRow(0)}
-                {this.renderRow(1)}
-                {this.renderRow(2)}
-                {this.renderRow(3)}
-                {this.renderRow(4)}
-                {this.renderRow(5)}
-                {this.renderRow(6)}
-                {this.renderRow(7)}
+                <div className = "center">
+                    {this.renderRow(0)}
+                    {this.renderRow(1)}
+                    {this.renderRow(2)}
+                    {this.renderRow(3)}
+                    {this.renderRow(4)}
+                    {this.renderRow(5)}
+                    {this.renderRow(6)}
+                    {this.renderRow(7)}
+                    <p className = "turn">
+                        <br></br>
+                        {this.state.turn + "'s Turn"}
+                    </p>
+                </div>
             </div>
         )
     }
@@ -282,9 +423,7 @@ class Board extends React.Component {
 class Game extends React.Component {
     render() {
         return(
-            <div className="center">
-                <Board />
-            </div>
+            <Board />
         )
     }
 }
