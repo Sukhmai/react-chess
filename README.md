@@ -1,7 +1,8 @@
 
 # React Chess
 
-This was a project to teach myself react.js. I built a chess app that runs on a website. It currently is all local.
+This was a project to teach myself react.js. I built a chess app that runs on a website. It currently is all local. I learned how components work, and how to control state by developing this app.
+It currently checks for valid moves and switches turns.
 
 ## Todos
 * Add checker for En Passant
@@ -16,6 +17,6 @@ In the project directory, you can run:
 ### `npm install`
 ### `npm start`
 
-Then go to localhost:3000 to see your own version of the app.
+Then go to [localhost:3000](http://localhost:3000/) to see your own version of the app.
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
