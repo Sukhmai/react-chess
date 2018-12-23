@@ -132,7 +132,9 @@ class Board extends React.Component {
                         WhiteKing, WhiteBishop, WhiteKnight, WhiteRook]],
             clicked: 0,
             clickedLocation: [0,0],
-            turn: "White"
+            turn: "White",
+            hasKingMoved:[false, false],
+            haveRooksMoved:[false, false, false, false],
         }
     }
 
@@ -140,17 +142,19 @@ class Board extends React.Component {
         const clicked = this.state.clicked;
         if (this.state.clicked % 2 === 0) {
             this.setState({clickedLocation: [k,j]});
+            this.setState({clicked: clicked + 1});
         } else {
             var row = this.state.clickedLocation[0];
             var col = this.state.clickedLocation[1];
-            if (this.isLegal(row, col, k, j, this.state.board[row][col], this.state.board)) {
-                const board = this.state.board.slice();
-                board[k][j] = this.state.board[row][col];
-                board[row][col] = Empty;
-                this.setState({board: board});
+            var piece = this.state.board[row][col];
+            if(this.state.board[k][j] === piece) {
+                this.setState({clicked: clicked + 1});
+            } else if (this.isLegal(row, col, k, j, piece, this.state.board)) {
+                this.movePiece(k, j, row, col, piece);
+                this.setState({clicked: clicked + 1});
             }
         }
-        this.setState({clicked: clicked + 1});
+
     }
 
     handleDrop(k, j, ev) {
@@ -158,12 +162,16 @@ class Board extends React.Component {
         var col = Number(ev.dataTransfer.getData("col"));
         var piece = ev.dataTransfer.getData("id");
         if (this.isLegal(row, col, k, j, piece, this.state.board)) {
-            this.setState({turn: this.isBlackPiece(piece) ? "White" : "Black"});
-            const board = this.state.board.slice();
-            board[k][j] = piece;
-            board[row][col] = Empty;
-            this.setState({board: board});
+            this.movePiece(k, j, row, col, piece);
         }
+    }
+
+    movePiece(k, j, row, col, piece) {
+        this.setState({turn: this.isBlackPiece(piece) ? "White" : "Black"});
+        const board = this.state.board.slice();
+        board[k][j] = piece;
+        board[row][col] = Empty;
+        this.setState({board: board});
     }
 
     isLegal(initRow, initCol, endRow, endCol, piece, board) {
@@ -363,12 +371,28 @@ class Board extends React.Component {
                 var endPos = board[endRow][endCol];
                 if(!(this.isEmpty(endPos))) {
                     if(color !== this.isBlackPiece(endPos)) {
+                        this.setState({hasKingMoved: !color ? [true, this.state.hasKingMoved[1]] : [this.state.hasKingMoved[0], true]});
                         return true;
                     }
                     return false;
                 }
+                this.setState({hasKingMoved: !color ? [true, this.state.hasKingMoved[1]] : [this.state.hasKingMoved[0], true]});
                 return true;
-            }
+            } else if (endRow === initRow && endCol === initCol + 2
+                && !(color ? this.state.hasKingMoved[1] : this.state.hasKingMoved[0])
+                && this.isEmpty(board[initRow][initCol + 1]) && this.isEmpty(board[initRow][initCol + 2])
+                && !(color ? this.state.haveRooksMoved[3]: this.state.haveRooksMoved[1])) {
+                    this.setState({hasKingMoved: !color ? [true, this.state.hasKingMoved[1]] : [this.state.hasKingMoved[0], true]});
+                    this.movePiece(endRow, endCol - 1, initRow, endCol + 1, color ? BlackRook : WhiteRook);
+                    return true;
+            } else if (endRow === initRow && endCol === initCol - 2
+                && !(color ? this.state.hasKingMoved[1] : this.state.hasKingMoved[0])
+                && this.isEmpty(board[initRow][initCol - 1]) && this.isEmpty(board[initRow][initCol - 2]) && this.isEmpty(board[initRow][initCol - 3])
+                && !(color ? this.state.haveRooksMoved[2]: this.state.haveRooksMoved[0])) {
+                    this.setState({hasKingMoved: !color ? [true, this.state.hasKingMoved[1]] : [this.state.hasKingMoved[0], true]});
+                    this.movePiece(endRow, endCol + 1, initRow, endCol - 2, color ? BlackRook : WhiteRook);
+                    return true;
+                }
         return false;
     }
 
