@@ -4,6 +4,8 @@
 This was a project to teach myself react.js. I built a chess app that runs on a website. It currently is all local. I learned how components work, and how to control state by developing this app.
 It currently checks for valid moves and switches turns.
 
+A working version of the game is hosted at https://sukhmai.github.io/react-chess/.
+
 ## Todos
 * Add checker for En Passant
 * Add time control
